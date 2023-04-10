@@ -1,3 +1,14 @@
-tensorflow
-numpy
+#tensorflow version
+# tensorflow
+# numpy
+# matplotlib
+
+# pytorch version
+torch
+torchvision
+torchaudio
 matplotlib
+Pillow
+scikit-learn
+seaborn
+wandb
