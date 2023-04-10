@@ -7,7 +7,7 @@ For PyTorch version
 
 Folder structure:
 ```
-dataroot
+root
 └── dataroot
     └── ISIC84by84
         ├── Test
