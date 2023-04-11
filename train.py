@@ -132,7 +132,7 @@ if torch.cuda.is_available():
 # training configs
 phase = 'ft' #['tr', 'ft']
 # phase = 'tr', models=['CNN', 'VGG']
-# phase = 'ft', models=['resnet50', 'resnet152', 'densenet121']
+# phase = 'ft', models=['resnet50', 'resnet152', 'densenet121','mobilenet_v2','efficientnet_b7','inception_v3','convnext_large']
 model_name = 'convnext_large' 
 num_epochs = 100
 optimizer_name = 'AdamW'
@@ -166,12 +166,15 @@ def choose_model(model_name):
 model = choose_model(model_name)
 if phase =='ft':
     seed = 'NIL'
-    if model_name in ['resnet50', 'resnet152', 'densenet121', 'efficientnet_b7','inception_v3','convnext_large']:
+    if model_name in ['resnet50', 'resnet152', 'densenet121', 'efficientnet_b7','inception_v3']:
         num_features = model.fc.in_features
         model.fc = nn.Linear(num_features, num_classes)
     elif model_name == 'mobilenet_v2':
         num_features = model.classifier[1].in_features
         model.classifier[1] = nn.Linear(num_features, num_classes)
+    elif model_name == 'convnext_large':
+        num_features = model.classifier[2].in_features
+        model.classifier[2] = nn.Linear(num_features, num_classes)
 model = model.to(device)
 
 class_weights = {'AK': 4.1665, 'BCC': 0.95016, 'BKL': 1.2133, 'DF': 22.03147, 'MEL': 0.69253, 'NV': 0.23972, 'SCC': 5.79995, 'VASC': 20.01552}
