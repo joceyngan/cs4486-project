@@ -1,25 +1,20 @@
-import os
 import pathlib
-from pathlib import Path
 import matplotlib.pyplot as plt
 from PIL import Image
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset, SubsetRandomSampler
-import torchvision
 from torchvision import datasets, transforms, models
 from torchvision.datasets import ImageFolder
 import torchvision.transforms as transforms
-import torch.nn.functional as F
 from tqdm import tqdm
-from sklearn.metrics import confusion_matrix
-import seaborn as sns
 from models import CNN, VGG
 from utils import getmeanstd, check_create_dir
 from datetime import datetime
 import random
 import wandb
+from dataset import ISICDataset
 
 dataroot = './Topic_5_Data/ISIC84by84'  #change to your data root dir
 train_data_dir = pathlib.Path(dataroot+'/Train')
@@ -31,38 +26,9 @@ check_create_dir(modelroot)
 datetime_str = datetime.now().strftime("%Y%m%d%H%M%S")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-batch_size = 32
+batch_size = 64
 img_h = 84
 img_w = 84
-
-class ISICDataset(Dataset):
-    def __init__(self, data_dir, transform=None):
-        self.data_dir = data_dir
-        self.transform = transform
-        self.images = []
-        self.labels = []
-        self.class_names = []
-
-        for label, class_name in enumerate(sorted(os.listdir(data_dir))):
-            if not os.path.isdir(os.path.join(data_dir, class_name)):
-                continue
-            class_dir = os.path.join(data_dir, class_name)
-            filenames = os.listdir(class_dir)
-            for filename in filenames:
-                self.images.append(os.path.join(class_dir, filename))
-                self.labels.append(label)
-            self.class_names.append(class_name)
-
-    def __len__(self):
-        return len(self.images)
-
-    def __getitem__(self, idx):
-        img_path = self.images[idx]
-        label = self.labels[idx]
-        image = Image.open(img_path).convert("RGB")
-        if self.transform:
-            image = self.transform(image)
-        return image, label
 
 # Data augmentation and normalization for training
 data_transforms = {
@@ -130,23 +96,33 @@ if torch.cuda.is_available():
     torch.backends.cudnn.benchmark = False
 
 # training configs
-phase = 'ft' #['tr', 'ft']
+phase = 'tr' #['tr', 'ft']
 # phase = 'tr', models=['CNN', 'VGG']
-# phase = 'ft', models=['resnet50', 'resnet152', 'densenet121','mobilenet_v2','efficientnet_b7','inception_v3','convnext_large']
-model_name = 'convnext_large' 
-num_epochs = 100
+# phase = 'ft', models=['resnet50', 'resnet152', 'densenet121','mobilenet_v2',
+#                       'efficientnet_b7','inception_v3','convnext_large',
+#                       'vit_l_32', 'swin_v2_b']
+model_name = 'CNN' 
+num_epochs = 500
 optimizer_name = 'AdamW'
-learning_rate = 0.0001
-weight_decay = 1e-4
-class_weighting = False
+learning_rate = 1e-3
+weight_decay = 1e-5
+class_weighting = True
 best_val_acc = 0.0
-goal_accu = 0.85
+goal_accu = 0.90
 dropout = 0.2
+
+# early stopping configs
+patience = 20
+min_delta = 0.001
+moving_average_alpha = 0.75  # close to 1: more forgiving to fluctuations, less sensitive to short-term changes
+best_val_loss = float("inf")
+counter = 0
+moving_average_loss = None
 
 num_classes = len(train_dataset.class_names)
   
 #select model
-def choose_model(model_name):
+def choose_model(model_name, phase):
     if phase == 'tr':
         return {
             'CNN': CNN(num_classes=num_classes, dropout=dropout),
@@ -161,9 +137,12 @@ def choose_model(model_name):
             'efficientnet_b7': models.efficientnet_b7(pretrained=True),
             'inception_v3': models.inception_v3(pretrained=True),
             'convnext_large': models.convnext_large(pretrained=True),
+            'swin_v2_b': models.swin_v2_b(pretrained=True),
+            'vit_l_32': models.vit_l_32(pretrained=True),
         }.get(model_name,models.resnet50(pretrained=True))
+        
 
-model = choose_model(model_name)
+model = choose_model(model_name, phase)
 if phase =='ft':
     seed = 'NIL'
     if model_name in ['resnet50', 'resnet152', 'densenet121', 'efficientnet_b7','inception_v3']:
@@ -175,6 +154,9 @@ if phase =='ft':
     elif model_name == 'convnext_large':
         num_features = model.classifier[2].in_features
         model.classifier[2] = nn.Linear(num_features, num_classes)
+    elif model_name in ['vit_l_32', 'swin_v2_b']:
+        num_features = model.head.in_features
+        model.head = nn.Linear(num_features, num_classes)
 model = model.to(device)
 
 class_weights = {'AK': 4.1665, 'BCC': 0.95016, 'BKL': 1.2133, 'DF': 22.03147, 'MEL': 0.69253, 'NV': 0.23972, 'SCC': 5.79995, 'VASC': 20.01552}
@@ -209,11 +191,12 @@ wandb.init(
     "architecture": model_name,
     "optimizer": optimizer_name,
     "dataset": "ISIC84by84",
+    "batch_size": batch_size,
     "epochs": num_epochs,
     "seed": seed,
     "learning_rate": learning_rate,
     "weight_decay": weight_decay,
-    "class_weighting": class_weighting,
+    "class_weighting": str(class_weighting),
     "dropout": dropout,
     }
 )
@@ -223,14 +206,6 @@ train_losses = []
 train_accuracies = []
 val_losses = []
 val_accuracies = []
-
-#for early stopping params
-patience = 10
-min_delta = 0.001
-moving_average_alpha = 0.5  # value to control the smoothness of the moving average
-best_val_loss = float("inf")
-counter = 0
-moving_average_loss = None
 
 #training loop
 history_folder = "./results/{}/train_history/".format(train_name)
@@ -284,29 +259,37 @@ for epoch in range(num_epochs):
                        keys=["train_accuracy", "val_accuracy","train_loss", "val_loss"],
                        title="Accuracy & Loss",
                        xname="epoch")})
-
+    
+    save_model_name = f"{modelroot}{datetime_str}_{model_name}_ep{epoch+1}_acc{epoch_acc_val:.2f}.pth"
     if epoch_acc_val > best_val_acc and epoch != 0 and epoch_acc_val > goal_accu:
         best_val_acc = epoch_acc_val
-        torch.save(model.state_dict(), f"{modelroot}{datetime_str}_{model_name}_ep{epoch+1}_acc{epoch_acc_val:.2f}.pth")
+        torch.save(model.state_dict(), save_model_name)
+    if epoch_acc_val > goal_accu:
+        torch.save(model.state_dict(), save_model_name)
     if (epoch+1) % 20 == 0:
-        torch.save(model.state_dict(), f"{modelroot}{datetime_str}_{model_name}_ep{epoch+1}_acc{epoch_acc_val:.2f}.pth")
+        torch.save(model.state_dict(), save_model_name)
+
 
     #early stopping implenmentation
+    if sum(val_accuracies[-5:])/5 - sum(val_accuracies[-10:])/10 > 0.01:
+        accu_increasing = True
+    else:
+        accu_increasing = False
+    
     if moving_average_loss is None:
         moving_average_loss = epoch_loss_val
     else:
         moving_average_loss = moving_average_alpha * moving_average_loss + (1 - moving_average_alpha) * epoch_loss_val
     print(f"Epoch {epoch+1}, Validation Loss: {epoch_loss_val:.4f}, Moving Average Loss: {moving_average_loss:.4f}")
 
-    if moving_average_loss < best_val_loss - min_delta:
+    if moving_average_loss < best_val_loss - min_delta or accu_increasing:
         best_val_loss = moving_average_loss
         counter = 0
-        # Save the model so far
-        torch.save(model.state_dict(), f"{modelroot}{datetime_str}_{model_name}_ep{epoch+1}_acc{epoch_acc_val:.2f}.pth")
     else:
         counter += 1
         print(f"Early stopping counter: {counter}/{patience}")
         if counter >= patience:
+            torch.save(model.state_dict(), save_model_name)
             print("Early stopping triggered.")
             break
 
