@@ -51,6 +51,7 @@ def choose_model(model_name, num_classes):
 def predict(model, test_data):
     model.eval()
     all_preds = []
+    all_top5_preds = []  # Add this line
     all_labels = []
 
     with torch.no_grad():
@@ -60,13 +61,23 @@ def predict(model, test_data):
 
             outputs = model(data)
             _, preds = torch.max(outputs, 1)
+            _, top5_preds = torch.topk(outputs, 5, 1)  # Add this line
 
             all_preds.extend(preds.cpu().numpy())
+            all_top5_preds.extend(top5_preds.cpu().numpy())  # Add this line
             all_labels.extend(labels.cpu().numpy())
 
-    return all_preds, all_labels
+    return all_preds, all_top5_preds, all_labels  # Update this line
 
-def plot_confusion_matrix(y_true, y_pred, class_names, train_name):
+def top_k_accuracy(y_true, y_topk_preds, k=1):
+    count = 0
+    for i in range(len(y_true)):
+        if y_true[i] in y_topk_preds[i][:k]:
+            count += 1
+    return count / len(y_true)
+
+
+def plot_confusion_matrix(y_true, y_pred, class_names, filename, top1_acc, top5_acc):
     cm_folder = './cm/'
     check_create_dir(cm_folder)
     cm = confusion_matrix(y_true, y_pred)
@@ -82,13 +93,21 @@ def plot_confusion_matrix(y_true, y_pred, class_names, train_name):
 
     plt.figure(figsize=(10, 7))
     sns.heatmap(df_cm, annot=cell_labels, cmap="RdPu", fmt='', cbar=False)
-    plt.title(filename)
+    plt.title(filename, y=1.08)
+    plt.text(0.5, 1.02, "Top-1 Acc: {:.2%} | Top-5 Acc: {:.2%}".format(top1_acc, top5_acc),
+             horizontalalignment='center',
+             fontsize=12,
+             transform=plt.gca().transAxes)
     plt.xlabel("Predicted")
     plt.ylabel("True")
-    plt.savefig(cm_folder+"{}_cm.png".format(train_name))
+    plt.savefig(cm_folder+"{}_cm.png".format(filename))
     # plt.show()
 
 if __name__ == "__main__":
+    model_path = "./models/20230413014556_VGG_ep121_acc0.62.pth" # change to your model path
+    model_name = "VGG"                                           # change this too
+    filename = model_path.split("/")[-1]  # Get the filename without the directory path
+    train_name = filename.split("_")[0]
     dataroot = './Topic_5_Data/ISIC84by84'  #change to your data root dir
     test_data_dir = Path(dataroot+'/Test')
     data_transforms = {
@@ -102,10 +121,6 @@ if __name__ == "__main__":
     test_dataset = ISICDataset(test_data_dir, transform=data_transforms['test'])
     test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False, num_workers=4)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model_path = "./models/20230411233204_convnext_large_ep18_acc0.82.pth"
-    filename = model_path.split("/")[-1]  # Get the filename without the directory path
-    train_name = filename.split("_")[0]
-    model_name = "convnext_large"
     
     test_data = test_loader
     class_names = test_dataset.class_names
@@ -115,5 +130,7 @@ if __name__ == "__main__":
     model.load_state_dict(torch.load(model_path))
     model.to(device)
 
-    predictions, true_labels = predict(model, test_data)
-    plot_confusion_matrix(true_labels, predictions, class_names, filename)
+    predictions, top5_predictions, true_labels = predict(model, test_data)  # Update this line
+    top1_accuracy = top_k_accuracy(true_labels, top5_predictions, k=1)
+    top5_accuracy = top_k_accuracy(true_labels, top5_predictions, k=5)
+    plot_confusion_matrix(true_labels, predictions, class_names, filename, top1_accuracy, top5_accuracy)
