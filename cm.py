@@ -51,7 +51,7 @@ def choose_model(model_name, num_classes):
 def predict(model, test_data):
     model.eval()
     all_preds = []
-    all_top5_preds = []  # Add this line
+    all_topk_preds = {k: [] for k in range(1, 6)} 
     all_labels = []
 
     with torch.no_grad():
@@ -61,13 +61,16 @@ def predict(model, test_data):
 
             outputs = model(data)
             _, preds = torch.max(outputs, 1)
-            _, top5_preds = torch.topk(outputs, 5, 1)  # Add this line
+
+            # Modify this loop
+            for k in range(1, 6):
+                _, topk_preds = torch.topk(outputs, k, 1)
+                all_topk_preds[k].extend(topk_preds.cpu().numpy())
 
             all_preds.extend(preds.cpu().numpy())
-            all_top5_preds.extend(top5_preds.cpu().numpy())  # Add this line
             all_labels.extend(labels.cpu().numpy())
 
-    return all_preds, all_top5_preds, all_labels  # Update this line
+    return all_preds, all_topk_preds, all_labels 
 
 def top_k_accuracy(y_true, y_topk_preds, k=1):
     count = 0
@@ -77,7 +80,7 @@ def top_k_accuracy(y_true, y_topk_preds, k=1):
     return count / len(y_true)
 
 
-def plot_confusion_matrix(y_true, y_pred, class_names, filename, top1_acc, top5_acc):
+def plot_confusion_matrix(y_true, y_pred, class_names, filename, top1_acc, top2_acc, top3_acc):
     cm_folder = './cm/'
     check_create_dir(cm_folder)
     cm = confusion_matrix(y_true, y_pred)
@@ -94,7 +97,7 @@ def plot_confusion_matrix(y_true, y_pred, class_names, filename, top1_acc, top5_
     plt.figure(figsize=(10, 7))
     sns.heatmap(df_cm, annot=cell_labels, cmap="RdPu", fmt='', cbar=False)
     plt.title(filename, y=1.08)
-    plt.text(0.5, 1.02, "Top-1 Acc: {:.2%} | Top-5 Acc: {:.2%}".format(top1_acc, top5_acc),
+    plt.text(0.5, 1.02, "Top-1 Acc: {:.2%} | Top-2 Acc: {:.2%} | Top-3 Acc: {:.2%}".format(top1_acc, top2_acc, top3_acc),
              horizontalalignment='center',
              fontsize=12,
              transform=plt.gca().transAxes)
@@ -104,8 +107,8 @@ def plot_confusion_matrix(y_true, y_pred, class_names, filename, top1_acc, top5_
     # plt.show()
 
 if __name__ == "__main__":
-    model_path = "./models/20230413014556_VGG_ep121_acc0.62.pth" # change to your model path
-    model_name = "VGG"                                           # change this too
+    model_path = "./models/20230411233204_convnext_large_ep18_acc0.82.pth" # change to your model path
+    model_name = "convnext_large"                                           # change this too
     filename = model_path.split("/")[-1]  # Get the filename without the directory path
     train_name = filename.split("_")[0]
     dataroot = './Topic_5_Data/ISIC84by84'  #change to your data root dir
@@ -130,7 +133,15 @@ if __name__ == "__main__":
     model.load_state_dict(torch.load(model_path))
     model.to(device)
 
-    predictions, top5_predictions, true_labels = predict(model, test_data)  # Update this line
-    top1_accuracy = top_k_accuracy(true_labels, top5_predictions, k=1)
-    top5_accuracy = top_k_accuracy(true_labels, top5_predictions, k=5)
-    plot_confusion_matrix(true_labels, predictions, class_names, filename, top1_accuracy, top5_accuracy)
+    predictions, all_topk_predictions, true_labels = predict(model, test_data)
+
+    accuracy_scores = {}
+    for k in range(1, 6):
+        accuracy_scores[f"top{k}_accuracy"] = top_k_accuracy(true_labels, all_topk_predictions[k], k=k)
+
+    print(accuracy_scores)
+
+    top1_accuracy = accuracy_scores['top1_accuracy']
+    top2_accuracy = accuracy_scores['top2_accuracy']
+    top3_accuracy = accuracy_scores['top3_accuracy']
+    plot_confusion_matrix(true_labels, predictions, class_names, filename, top1_accuracy, top2_accuracy, top3_accuracy)
