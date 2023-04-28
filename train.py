@@ -1,12 +1,11 @@
 import pathlib
+from pathlib import Path
 import matplotlib.pyplot as plt
-from PIL import Image
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader, Dataset, SubsetRandomSampler
-from torchvision import datasets, transforms, models
-from torchvision.datasets import ImageFolder
+from torch.utils.data import DataLoader, SubsetRandomSampler, WeightedRandomSampler
+from torchvision import transforms, models
 import torchvision.transforms as transforms
 from tqdm import tqdm
 from models import CNN, VGG
@@ -15,8 +14,11 @@ from datetime import datetime
 import random
 import wandb
 from dataset import ISICDataset
+import time
+from sklearn.utils.class_weight import compute_sample_weight
+import numpy as np
 
-dataroot = './Topic_5_Data/ISIC84by84'  #change to your data root dir
+dataroot = './Topic_5_Data/ISIC84by84_new'  #change to your data root dir
 train_data_dir = pathlib.Path(dataroot+'/Train')
 test_data_dir = pathlib.Path(dataroot+'/Test')
 
@@ -30,27 +32,48 @@ batch_size = 64
 img_h = 84
 img_w = 84
 
+# ./Topic_5_Data/ISIC84by84/Train mean and std:
+# ([0.0209, 0.0166, 0.0164], [0.1211, 0.0976, 0.0974])
+
+# ./Topic_5_Data/ISIC84by84_new/Train mean and std:
+# ([0.0105, 0.0083, 0.0082],[0.0870, 0.0700, 0.0699])
+
 # Data augmentation and normalization for training
 data_transforms = {
     'train': transforms.Compose([
         transforms.RandomHorizontalFlip(),
         transforms.RandomVerticalFlip(),
         transforms.RandomRotation(90),
-        transforms.RandomResizedCrop(84, scale=(0.9, 1.0)),
+        transforms.RandomResizedCrop(img_h, scale=(0.8, 1.0)),
         transforms.ToTensor(),
-        transforms.Normalize([0.0209, 0.0166, 0.0164], [0.1211, 0.0976, 0.0974]) # prev calculated mean & std of topic 5 train set
+        transforms.Normalize([0.0105, 0.0083, 0.0082], [0.0870, 0.0700, 0.0699]) # prev calculated mean & std of topic 5 train set
         # transforms.Normalize(getmeanstd(train_data_dir,img_h, img_w,batch_size)[0], getmeanstd(train_data_dir,img_h, img_w,batch_size)[1])
     ]),
     'test': transforms.Compose([
-        transforms.Resize(84),
+        transforms.Resize(img_h),
         transforms.ToTensor(),
-        transforms.Normalize([0.0201, 0.0162, 0.0163], [0.1177, 0.0961, 0.0972]) # prev calculated mean & std of topic 5 test set
+        transforms.Normalize([0.0104, 0.0084, 0.0085], [0.0858, 0.0702, 0.0710]) # prev calculated mean & std of topic 5 test set
         # transforms.Normalize(getmeanstd(test_data_dir, img_h, img_w,batch_size)[0], getmeanstd(test_data_dir,img_h, img_w,batch_size)[1])
     ]),
 }
 
 train_dataset = ISICDataset(train_data_dir, transform=data_transforms['train'])
 test_dataset = ISICDataset(test_data_dir, transform=data_transforms['test'])
+
+num_classes = len(train_dataset.class_names)
+
+ttl = len(list(train_data_dir.glob('**/*.jpg')))
+counts = {}
+for i in range(num_classes):
+    image_count = len(list(train_data_dir.glob(train_dataset.class_names[i] + '/*.jpg')))
+    counts[train_dataset.class_names[i]] = image_count
+    print(train_dataset.class_names[i], ':', image_count)
+
+# Calculate inverted class weights
+total_instances = sum(counts.values())
+class_weights = {label: total_instances / count for label, count in counts.items()}
+print('total_instances: ', total_instances)
+print('class_weights: ', class_weights)
 
 # Train & val set split
 def stratified_split(labels, train_ratio, seed=None):
@@ -77,15 +100,30 @@ def stratified_split(labels, train_ratio, seed=None):
     return train_indices, val_indices
 
 train_indices, val_indices = stratified_split(train_dataset.labels, train_ratio=0.8, seed=42)
-train_sampler = SubsetRandomSampler(train_indices)
-val_sampler = SubsetRandomSampler(val_indices)
+# train_sampler = SubsetRandomSampler(train_indices)
+# val_sampler = SubsetRandomSampler(val_indices)
+
+# train_weights = compute_sample_weight('balanced', train_dataset.labels, indices=train_indices)
+# print('train_weights:', dict(zip(np.unique(train_dataset.labels), train_weights)))
+# weighted_sampler = WeightedRandomSampler(weights=class_weights, num_samples=len(instance_weights), replacement=True)
+
+class_weights = {i: total_instances / counts[train_dataset.class_names[i]] for i in range(num_classes)}
+print('class_weights: ', class_weights)
+
+# Compute the sample weights for each sample in the train dataset
+sample_weights_train = [class_weights[train_dataset.labels[i]] for i in train_indices]
+train_sampler = WeightedRandomSampler(sample_weights_train, num_samples=len(train_indices), replacement=True)
+
+# Compute the sample weights for each sample in the val dataset
+sample_weights_val = [class_weights[train_dataset.labels[i]] for i in val_indices]
+val_sampler = WeightedRandomSampler(sample_weights_val, num_samples=len(val_indices), replacement=True)
 
 train_loader = DataLoader(train_dataset, batch_size=batch_size, sampler=train_sampler, shuffle=False, num_workers=4)
 val_loader = DataLoader(train_dataset, batch_size=batch_size, sampler=val_sampler, shuffle=False, num_workers=4)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=4)
 
 # Generate a random seed
-seed = random.randint(0, 2**32 - 1)
+seed = int(time.time()) % (2**32 - 1)
 
 # Set the seed for PyTorch, random, and CUDA 
 torch.manual_seed(seed)
@@ -101,15 +139,20 @@ phase = 'tr' #['tr', 'ft']
 # phase = 'ft', models=['resnet50', 'resnet152', 'densenet121','mobilenet_v2',
 #                       'efficientnet_b7','inception_v3','convnext_large',
 #                       'vit_l_32', 'swin_v2_b']
-model_name = 'CNN' 
+model_name = 'CNN'
 num_epochs = 500
-optimizer_name = 'AdamW'
-learning_rate = 1e-3
+optimizer_name = 'AdamW' # ['Adam', 'AdamW', 'SGD', 'Adagrad']
+learning_rate = 1e-5
 weight_decay = 1e-5
 class_weighting = True
 best_val_acc = 0.0
-goal_accu = 0.90
-dropout = 0.2
+goal_accu = 0.95
+dropout = 0.5
+
+#finetuning configs
+resume_training = False
+pretrained_model_path = Path('')
+start_epoch = 122
 
 # early stopping configs
 patience = 20
@@ -118,8 +161,6 @@ moving_average_alpha = 0.75  # close to 1: more forgiving to fluctuations, less 
 best_val_loss = float("inf")
 counter = 0
 moving_average_loss = None
-
-num_classes = len(train_dataset.class_names)
   
 #select model
 def choose_model(model_name, phase):
@@ -138,7 +179,9 @@ def choose_model(model_name, phase):
             'inception_v3': models.inception_v3(pretrained=True),
             'convnext_large': models.convnext_large(pretrained=True),
             'swin_v2_b': models.swin_v2_b(pretrained=True),
-            'vit_l_32': models.vit_l_32(pretrained=True),
+            'vit_l_32': models.vit_l_32(pretrained=True),  #change image data size to 224
+            'CNN': CNN(num_classes=num_classes, dropout=dropout),
+            'VGG': VGG(num_classes=num_classes, dropout=dropout)
         }.get(model_name,models.resnet50(pretrained=True))
         
 
@@ -154,20 +197,36 @@ if phase =='ft':
     elif model_name == 'convnext_large':
         num_features = model.classifier[2].in_features
         model.classifier[2] = nn.Linear(num_features, num_classes)
-    elif model_name in ['vit_l_32', 'swin_v2_b']:
+    elif model_name in ['swin_v2_b']:
         num_features = model.head.in_features
         model.head = nn.Linear(num_features, num_classes)
+    elif model_name in ['vit_l_32']:
+        num_features = model.heads.head.in_features
+        model.heads.head = nn.Linear(num_features, num_classes)
+    elif model_name in ['CNN', 'VGG']:
+        for param in model.parameters():
+            param.requires_grad = False
+        # Unfreeze the last layer
+        for param in model.fc2.parameters():
+            param.requires_grad = True
+
+
+if resume_training:
+    model.load_state_dict(torch.load(pretrained_model_path))
+    pretrained_model_name = pretrained_model_path.stem
+    train_name = f'{model_name}-{phase}-{datetime_str}-fm-{pretrained_model_path.stem[:14]}'
+    print(f"Resuming training from epoch {start_epoch}")
+    print('model: ', pretrained_model_name)
+else:
+    train_name = f'{model_name}-{phase}-'+datetime_str
+    start_epoch = 0
+
 model = model.to(device)
 
-class_weights = {'AK': 4.1665, 'BCC': 0.95016, 'BKL': 1.2133, 'DF': 22.03147, 'MEL': 0.69253, 'NV': 0.23972, 'SCC': 5.79995, 'VASC': 20.01552}
-weights = [class_weights[class_name] for class_name in train_dataset.class_names]
-weights = torch.tensor(weights, device=device, dtype=torch.float)
-
 #select loss function
-if class_weighting:
-    criterion = nn.CrossEntropyLoss(weight=weights)  # use class-weighting
-else:
-    criterion = nn.CrossEntropyLoss()
+# criterion = nn.CrossEntropyLoss(weight=weights)  # use class-weighting
+criterion = nn.CrossEntropyLoss()
+# criterion = nn.MSELoss()
 
 #select optimiser
 def choose_optimizer(optimizer_name):
@@ -179,18 +238,17 @@ def choose_optimizer(optimizer_name):
     }.get(optimizer_name,optim.Adam(model.parameters(), lr=learning_rate))   
 optimizer = choose_optimizer(optimizer_name)
 
-train_name = f'{model_name}-{phase}-'+datetime_str
 
 # start a new wandb run to track this script
 wandb.init(
-    # set the wandb project where this run will be logged
     project="cs4486-hw3-skin-cancer-classification",
     name=train_name,
     # track hyperparameters and run metadata
     config={
     "architecture": model_name,
     "optimizer": optimizer_name,
-    "dataset": "ISIC84by84",
+    "dataset": dataroot.split('/')[-1],
+    "ft_from": ('{}'.format(pretrained_model_name) if resume_training else "NIL"),
     "batch_size": batch_size,
     "epochs": num_epochs,
     "seed": seed,
@@ -207,11 +265,26 @@ train_accuracies = []
 val_losses = []
 val_accuracies = []
 
-#training loop
+# logging in local
 history_folder = "./results/{}/train_history/".format(train_name)
 check_create_dir(history_folder)
+with open(history_folder+"{}_log.txt".format(train_name), "a") as f:
+    f.write('train_name: {}, \n'.format(train_name))
+    f.write('train_weights: {}'.format(class_weights))
+    f.write('architecture: {}'.format(model_name))
+    f.write('optimizer: {}'.format(optimizer_name))
+    f.write('dataset: {}'.format(dataroot.split('/')[-1]))
+    f.write('ft_from: {}'.format(pretrained_model_name) if resume_training else "NIL")
+    f.write('batch_size: {}'.format(batch_size))
+    f.write('epochs: {}'.format(num_epochs))
+    f.write('seed: {}'.format(seed))
+    f.write('learning_rate: {}'.format(learning_rate))
+    f.write('weight_decay: {}'.format(weight_decay))
+    f.write('class_weighting: {}'.format(str(class_weighting)))
+    f.write('dropout: {}'.format(dropout))
 
-for epoch in range(num_epochs):
+#training loop
+for epoch in range(start_epoch, num_epochs):
     model.train()
     running_loss = 0.0
     running_corrects = 0
@@ -261,7 +334,7 @@ for epoch in range(num_epochs):
                        xname="epoch")})
     
     save_model_name = f"{modelroot}{datetime_str}_{model_name}_ep{epoch+1}_acc{epoch_acc_val:.2f}.pth"
-    if epoch_acc_val > best_val_acc and epoch != 0 and epoch_acc_val > goal_accu:
+    if epoch_acc_val > best_val_acc and epoch_acc_val >= 0.75:
         best_val_acc = epoch_acc_val
         torch.save(model.state_dict(), save_model_name)
     if epoch_acc_val > goal_accu:
@@ -271,7 +344,7 @@ for epoch in range(num_epochs):
 
 
     #early stopping implenmentation
-    if sum(val_accuracies[-5:])/5 - sum(val_accuracies[-10:])/10 > 0.01:
+    if sum(val_accuracies[-10:])/10 - sum(val_accuracies[-50:])/50 > 0.01:
         accu_increasing = True
     else:
         accu_increasing = False

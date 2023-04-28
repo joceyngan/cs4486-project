@@ -7,11 +7,11 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 import pandas as pd
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, f1_score
 from pathlib import Path
 
 from models import CNN, VGG
-from utils import check_create_dir
+from utils import getmeanstd, check_create_dir
 from dataset import ISICDataset
 
 def choose_model(model_name, num_classes):
@@ -41,9 +41,12 @@ def choose_model(model_name, num_classes):
     elif model_name == 'convnext_large':
         num_features = model.classifier[2].in_features
         model.classifier[2] = nn.Linear(num_features, num_classes)
-    elif model_name in ['vit_l_32', 'swin_v2_b']:
+    elif model_name in ['swin_v2_b']:
         num_features = model.head.in_features
         model.head = nn.Linear(num_features, num_classes)
+    elif model_name in ['vit_l_32']:
+        num_features = model.heads.head.in_features
+        model.heads.head = nn.Linear(num_features, num_classes)
 
     return model
 
@@ -62,10 +65,10 @@ def predict(model, test_data):
             outputs = model(data)
             _, preds = torch.max(outputs, 1)
 
-            # Modify this loop
             for k in range(1, 6):
                 _, topk_preds = torch.topk(outputs, k, 1)
-                all_topk_preds[k].extend(topk_preds.cpu().numpy())
+                for i in range(len(topk_preds)):
+                    all_topk_preds[k].append(topk_preds[i].cpu().numpy())
 
             all_preds.extend(preds.cpu().numpy())
             all_labels.extend(labels.cpu().numpy())
@@ -105,27 +108,60 @@ def plot_confusion_matrix(y_true, y_pred, class_names, filename, top1_acc, top2_
     plt.ylabel("True")
     plt.savefig(cm_folder+"{}_cm.png".format(filename))
     # plt.show()
+    
+def plot_f1(class_names, f1_scores_per_class, avg_f1_score):
+    f1_folder = './f1/'
+    check_create_dir(f1_folder)
+    
+    data = {"Class": class_names, "F1 Score": f1_scores_per_class}
+    df = pd.DataFrame(data)
+    df.loc[len(df)] = ["Average", avg_f1_score]
+
+    plt.figure(figsize=(10, 6))
+    sns.set(style="whitegrid")
+    ax = sns.barplot(x="Class", y="F1 Score", data=df, palette="coolwarm")
+    ax.set(ylim=(0, 1))  # Set y-axis limit to range from 0 to 1
+    plt.title("{}\nF1 Scores per Class and Average F1 Score".format(filename))
+
+    # Annotate the bars with their respective values
+    for p in ax.patches:
+        ax.annotate(
+            format(p.get_height(), ".2f"),
+            (p.get_x() + p.get_width() / 2.0, p.get_height()),
+            ha="center",
+            va="baseline",
+            fontsize=12,
+            color="black",
+            xytext=(0, 5),
+            textcoords="offset points",
+    )
+    plt.savefig(f1_folder+"{}_f1.png".format(filename))
+    # plt.show()
 
 if __name__ == "__main__":
-    model_path = "./models/20230411233204_convnext_large_ep18_acc0.82.pth" # change to your model path
-    model_name = "convnext_large"                                           # change this too
-    filename = model_path.split("/")[-1]  # Get the filename without the directory path
+    model_path = "./models/20230428202406_swin_v2_b_ep106_acc0.84.pth" # change to your model path
+    model_name = "swin_v2_b"                                           # change this too
+    filename = model_path.split("/")[-1]
     train_name = filename.split("_")[0]
     dataroot = './Topic_5_Data/ISIC84by84'  #change to your data root dir
     test_data_dir = Path(dataroot+'/Test')
+    img_h = img_w = 84
+    batch_size = 64
     data_transforms = {
     'test': transforms.Compose([
-        transforms.Resize(84),
+        transforms.Resize(img_h),
         transforms.ToTensor(),
-        transforms.Normalize([0.0201, 0.0162, 0.0163], [0.1177, 0.0961, 0.0972]) # prev calculated mean & std of topic 5 test set
+        transforms.Normalize([0.0104, 0.0084, 0.0085], [0.0858, 0.0702, 0.0710]) # prev calculated mean & std of topic 5 test set
         # transforms.Normalize(getmeanstd(test_data_dir, img_h, img_w,batch_size)[0], getmeanstd(test_data_dir,img_h, img_w,batch_size)[1])
         ]),
     }
     test_dataset = ISICDataset(test_data_dir, transform=data_transforms['test'])
-    test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False, num_workers=4)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=4)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
     test_data = test_loader
+    print('model_path: ', model_path)
+    print("Length of test_data:", len(test_data.dataset))
     class_names = test_dataset.class_names
 
     # Replace with your own model and test data
@@ -134,6 +170,18 @@ if __name__ == "__main__":
     model.to(device)
 
     predictions, all_topk_predictions, true_labels = predict(model, test_data)
+    print("Length of all_preds:", len(predictions))
+    print("Length of all_topk_preds:", len(all_topk_predictions))
+    print("Length of all_labels:", len(true_labels))
+
+    
+    # Calculate the F1 score for each class
+    f1_scores_per_class = f1_score(true_labels, predictions, average=None)
+    # Calculate the average F1 score (macro-average)
+    avg_f1_score = f1_score(true_labels, predictions, average='macro')
+
+    print("F1 scores per class:", f1_scores_per_class)
+    print("Average F1 score:", avg_f1_score)
 
     accuracy_scores = {}
     for k in range(1, 6):
@@ -145,3 +193,4 @@ if __name__ == "__main__":
     top2_accuracy = accuracy_scores['top2_accuracy']
     top3_accuracy = accuracy_scores['top3_accuracy']
     plot_confusion_matrix(true_labels, predictions, class_names, filename, top1_accuracy, top2_accuracy, top3_accuracy)
+    plot_f1(class_names, f1_scores_per_class, avg_f1_score)
