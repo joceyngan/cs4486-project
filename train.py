@@ -16,7 +16,6 @@ import wandb
 from dataset import ISICDataset
 import time
 from sklearn.utils.class_weight import compute_sample_weight
-import numpy as np
 
 dataroot = './Topic_5_Data/ISIC84by84_new'  #change to your data root dir
 train_data_dir = pathlib.Path(dataroot+'/Train')
