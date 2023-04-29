@@ -1,14 +1,9 @@
-#tensorflow version
-# tensorflow
-# numpy
-# matplotlib
-
-# pytorch version
-torch
+torch >= 2.0
 torchvision
 torchaudio
 matplotlib
 Pillow
 scikit-learn
+tqdm
 seaborn
 wandb

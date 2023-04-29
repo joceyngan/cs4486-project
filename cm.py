@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import confusion_matrix, f1_score
 from pathlib import Path
-
+from tqdm import tqdm
 from models import CNN, VGG
 from utils import getmeanstd, check_create_dir
 from dataset import ISICDataset
@@ -58,7 +58,7 @@ def predict(model, test_data):
     all_labels = []
 
     with torch.no_grad():
-        for data, labels in test_data:
+        for data, labels in tqdm(test_data):
             data = data.to(device)
             labels = labels.to(device)
 
@@ -170,10 +170,6 @@ if __name__ == "__main__":
     model.to(device)
 
     predictions, all_topk_predictions, true_labels = predict(model, test_data)
-    print("Length of all_preds:", len(predictions))
-    print("Length of all_topk_preds:", len(all_topk_predictions))
-    print("Length of all_labels:", len(true_labels))
-
     
     # Calculate the F1 score for each class
     f1_scores_per_class = f1_score(true_labels, predictions, average=None)
