@@ -53,7 +53,7 @@ ConvNeXT Large (Finetuned from Imagenet pretrained weight): [link](https://portl
 Swin Transformer v2 (Finetuned from Imagenet pretrained weight): [link](https://portland-my.sharepoint.com/:u:/g/personal/szfung9-c_my_cityu_edu_hk/EW2aLbpq_3pIoZD073MIsyQBZkL0bcxSfIAuMFV-MdyzCQ?e=h4zQ9b)
 
 
-<h2>5. Training & Inference</h2>  
+<h2>4. Training & Inference</h2>  
 
 For model training and finetuning:
 train.py
