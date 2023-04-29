@@ -84,7 +84,7 @@ def top_k_accuracy(y_true, y_topk_preds, k=1):
 
 
 def plot_confusion_matrix(y_true, y_pred, class_names, filename, top1_acc, top2_acc, top3_acc):
-    cm_folder = './cm/'
+    cm_folder = './results/cm/'
     check_create_dir(cm_folder)
     cm = confusion_matrix(y_true, y_pred)
     df_cm = pd.DataFrame(cm, index=class_names, columns=class_names)
@@ -110,7 +110,7 @@ def plot_confusion_matrix(y_true, y_pred, class_names, filename, top1_acc, top2_
     # plt.show()
     
 def plot_f1(class_names, f1_scores_per_class, avg_f1_score):
-    f1_folder = './f1/'
+    f1_folder = './results/f1/'
     check_create_dir(f1_folder)
     
     data = {"Class": class_names, "F1 Score": f1_scores_per_class}
@@ -139,8 +139,8 @@ def plot_f1(class_names, f1_scores_per_class, avg_f1_score):
     # plt.show()
 
 if __name__ == "__main__":
-    model_path = "./models/20230428202406_swin_v2_b_ep106_acc0.84.pth" # change to your model path
-    model_name = "swin_v2_b"                                           # change this too
+    model_path = "./models/20230429032042_CNN_ep410_acc0.81.pth" # change to your model path
+    model_name = "CNN"                                           # change this too
     filename = model_path.split("/")[-1]
     train_name = filename.split("_")[0]
     dataroot = './Topic_5_Data/ISIC84by84'  #change to your data root dir
