@@ -24,10 +24,14 @@ root
 
 <h2>2. Datasets</h2>  
 
-Original ISIC84by84: [link](https://portland-my.sharepoint.com/:u:/g/personal/szfung9-c_my_cityu_edu_hk/ERZovvPIWtJHtDzDMr6qjcMB-e-1LD91YhZ2jZXQ9DjjlQ?e=AjCdJ6)
 
-Cleansed ISIC84by84: [link](https://drive.google.com/file/d/1WYQ3FPrdfN4c6FLp9_f_wQNZe4D2wHMo/view?usp=sharing)
 
+Original ISIC84by84 * : [link](https://portland-my.sharepoint.com/:u:/g/personal/szfung9-c_my_cityu_edu_hk/ERZovvPIWtJHtDzDMr6qjcMB-e-1LD91YhZ2jZXQ9DjjlQ?e=AjCdJ6)
+
+Cleansed ISIC84by84 * : [link](https://drive.google.com/file/d/1WYQ3FPrdfN4c6FLp9_f_wQNZe4D2wHMo/view?usp=sharing)
+
+*Please note the above datasets are provided by CityU for the CS4486 course project, does not guaranteed to be the same as official ISIC dataset.  
+ For the official ISIC data please refer to [ISIC Archive](https://www.isic-archive.com/#!/topWithHeader/wideContentTop/main).
 
 <h2>3. Best Models:</h2> 
 
