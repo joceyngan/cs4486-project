@@ -164,7 +164,6 @@ if __name__ == "__main__":
     print("Length of test_data:", len(test_data.dataset))
     class_names = test_dataset.class_names
 
-    # Replace with your own model and test data
     model = choose_model(model_name, len(test_dataset.class_names))
     model.load_state_dict(torch.load(model_path))
     model.to(device)
