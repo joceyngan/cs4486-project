@@ -56,5 +56,6 @@ train.py
 For ploting confusion matrix and F1 scores:
 cm.py
 1. change dataroot path
-2. change model_path and model_name, model_name same as list in train.py
+2. change model_path and model_name, model_name same as listed in train.py
 3. run ```python cm.py ```
+4. if need pure inference can modify from cm.py, due to time limit of project it is not provided.
