@@ -70,9 +70,9 @@ for i in range(num_classes):
 
 # Calculate inverted class weights
 total_instances = sum(counts.values())
-class_weights = {label: total_instances / count for label, count in counts.items()}
+class_weights_str = {label: total_instances / count for label, count in counts.items()}
 print('total_instances: ', total_instances)
-print('class_weights: ', class_weights)
+print('class_weights: ', class_weights_str)
 
 # Train & val set split
 def stratified_split(labels, train_ratio, seed=None):
@@ -107,7 +107,6 @@ train_indices, val_indices = stratified_split(train_dataset.labels, train_ratio=
 # weighted_sampler = WeightedRandomSampler(weights=class_weights, num_samples=len(instance_weights), replacement=True)
 
 class_weights = {i: total_instances / counts[train_dataset.class_names[i]] for i in range(num_classes)}
-print('class_weights: ', class_weights)
 
 # Compute the sample weights for each sample in the train dataset
 sample_weights_train = [class_weights[train_dataset.labels[i]] for i in train_indices]
@@ -269,7 +268,7 @@ history_folder = "./results/{}/train_history/".format(train_name)
 check_create_dir(history_folder)
 with open(history_folder+"{}_log.txt".format(train_name), "a") as f:
     f.write('train_name: {}, \n'.format(train_name))
-    f.write('train_weights: {}, \n'.format(class_weights))
+    f.write('train_weights: {}, \n'.format(class_weights_str))
     f.write('architecture: {}, \n'.format(model_name))
     f.write('optimizer: {}, \n'.format(optimizer_name))
     f.write('dataset: {}, \n'.format(dataroot.split('/')[-1]))
