@@ -30,6 +30,7 @@ Cleansed ISIC84by84: [link](https://drive.google.com/file/d/1WYQ3FPrdfN4c6FLp9_f
 
 
 <h2>3. Best Models:</h2> 
+
 Best model of each networks are trained/finetuned on original or cleansed dataset
 
 CNN: [link](https://portland-my.sharepoint.com/:u:/g/personal/szfung9-c_my_cityu_edu_hk/ESHombM__v1LiuUuGdtUpLcBB_Xi-ojziah5jdyTchR5Bg?e=2cvISS)
