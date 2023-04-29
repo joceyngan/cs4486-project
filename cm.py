@@ -146,7 +146,7 @@ if __name__ == "__main__":
     dataroot = './Topic_5_Data/ISIC84by84'  #change to your data root dir
     test_data_dir = Path(dataroot+'/Test')
     img_h = img_w = 84
-    batch_size = 64
+    batch_size = 1
     data_transforms = {
     'test': transforms.Compose([
         transforms.Resize(img_h),
