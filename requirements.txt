@@ -4,6 +4,7 @@ torchaudio
 matplotlib
 Pillow
 scikit-learn
+numpy
 tqdm
 seaborn
 wandb
