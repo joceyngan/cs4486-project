@@ -1,3 +1,10 @@
+<h2>Environment:</h2>
+
+python >= 3.9  
+torch >= 2.0  
+
+install requirements.txt
+
 <h2>1. Folder Structure:</h2> 
 
 ```
