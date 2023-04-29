@@ -1,4 +1,5 @@
-Folder structure:
+<h2>1. Folder Structure:</h2> 
+
 ```
 root
 └── dataroot
@@ -21,31 +22,35 @@ root
 └── utils.py
 ```
 
-Best models trained/finetuned on "ISIC84by84" dataset:
+<h2>2. Datasets</h2>  
 
-CNN:
-https://portland-my.sharepoint.com/:u:/g/personal/szfung9-c_my_cityu_edu_hk/ESHombM__v1LiuUuGdtUpLcBB_Xi-ojziah5jdyTchR5Bg?e=2cvISS
+Original ISIC84by84: [link](https://portland-my.sharepoint.com/:u:/g/personal/szfung9-c_my_cityu_edu_hk/ERZovvPIWtJHtDzDMr6qjcMB-e-1LD91YhZ2jZXQ9DjjlQ?e=AjCdJ6)
 
-VGG:
-https://portland-my.sharepoint.com/:u:/g/personal/szfung9-c_my_cityu_edu_hk/EdxUBmfARNZIpP_CsexoH9AB1dBcGb-KJ8FwuzH0qlgZyQ?e=xsEQ18
-
-Resnet50  (Finetuned from Imagenet pretrained weight):
-https://portland-my.sharepoint.com/:u:/g/personal/szfung9-c_my_cityu_edu_hk/ERXEZIn1NehFjOzuGbr7P8ABnt35KIR23vtRiMa-lhXx2A?e=K6A4Bv
-
-ConvNeXT (Finetuned from Imagenet pretrained weight):
-https://portland-my.sharepoint.com/:u:/g/personal/szfung9-c_my_cityu_edu_hk/EbrnGWzNGdtKtuk_zuGqLv8BGzBG_yDsjH6pBsLGCrPkMA?e=j24kHt
-
-Swin Transformer (Finetuned from Imagenet pretrained weight):
-https://portland-my.sharepoint.com/:u:/g/personal/szfung9-c_my_cityu_edu_hk/EW2aLbpq_3pIoZD073MIsyQBZkL0bcxSfIAuMFV-MdyzCQ?e=h4zQ9b
+Cleansed ISIC84by84: [link](https://drive.google.com/file/d/1WYQ3FPrdfN4c6FLp9_f_wQNZe4D2wHMo/view?usp=sharing)
 
 
+<h2>3. Best Models:</h2> 
+Best model of each networks are trained/finetuned on original or cleansed dataset
+
+CNN: [link](https://portland-my.sharepoint.com/:u:/g/personal/szfung9-c_my_cityu_edu_hk/ESHombM__v1LiuUuGdtUpLcBB_Xi-ojziah5jdyTchR5Bg?e=2cvISS)
+
+VGG19: [link](https://portland-my.sharepoint.com/:u:/g/personal/szfung9-c_my_cityu_edu_hk/EdxUBmfARNZIpP_CsexoH9AB1dBcGb-KJ8FwuzH0qlgZyQ?e=xsEQ18)
+
+Resnet50  (Finetuned from Imagenet pretrained weight): [link](https://portland-my.sharepoint.com/:u:/g/personal/szfung9-c_my_cityu_edu_hk/ERXEZIn1NehFjOzuGbr7P8ABnt35KIR23vtRiMa-lhXx2A?e=K6A4Bv)
+
+ConvNeXT Large (Finetuned from Imagenet pretrained weight): [link](https://portland-my.sharepoint.com/:u:/g/personal/szfung9-c_my_cityu_edu_hk/EbrnGWzNGdtKtuk_zuGqLv8BGzBG_yDsjH6pBsLGCrPkMA?e=j24kHt)
+
+Swin Transformer v2 (Finetuned from Imagenet pretrained weight): [link](https://portland-my.sharepoint.com/:u:/g/personal/szfung9-c_my_cityu_edu_hk/EW2aLbpq_3pIoZD073MIsyQBZkL0bcxSfIAuMFV-MdyzCQ?e=h4zQ9b)
+
+
+<h2>5. Training & Inference</h2>  
 
 For model training and finetuning:
 train.py
-1. change dataroot path
-2. for training modify # training configs
-3. for finetuning also modify #finetuning configs
-4. run ```CUDA_LAUNCH_BLOCKING=1 python train.py ```
+1. change dataroot path 
+2. for training modify # training configs 
+3. for finetuning also modify #finetuning configs 
+4. run ```CUDA_LAUNCH_BLOCKING=1 python train.py ``` 
 
 For ploting confusion matrix and F1 scores:
 cm.py
