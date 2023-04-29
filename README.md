@@ -33,6 +33,11 @@ Cleansed ISIC84by84: [link](https://drive.google.com/file/d/1WYQ3FPrdfN4c6FLp9_f
 
 Best model of each networks are trained/finetuned on original or cleansed dataset
 
+|Network| CNN | VGG19 | Resnet50 | ConvNeXT | Swin Transformer |  
+|-------|-----|-------|----------|----------|------------------|  
+|Validation accuracy | 74% | 75% | 78% | 85% | 84% |  
+|Top 1 accuracy | 56% | 56% | 65% | <mark>73%</mark> | 67% |  
+
 CNN: [link](https://portland-my.sharepoint.com/:u:/g/personal/szfung9-c_my_cityu_edu_hk/ESHombM__v1LiuUuGdtUpLcBB_Xi-ojziah5jdyTchR5Bg?e=2cvISS)
 
 VGG19: [link](https://portland-my.sharepoint.com/:u:/g/personal/szfung9-c_my_cityu_edu_hk/EdxUBmfARNZIpP_CsexoH9AB1dBcGb-KJ8FwuzH0qlgZyQ?e=xsEQ18)
