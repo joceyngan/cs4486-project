@@ -40,7 +40,7 @@ Best model of each networks are trained/finetuned on original or cleansed datase
 |Network| CNN | VGG19 | Resnet50 | ConvNeXT | Swin Transformer |  
 |-------|-----|-------|----------|----------|------------------|  
 |Validation accuracy | 74% | 75% | 78% | 85% | 84% |  
-|Top 1 accuracy | 56% | 56% | 65% | <mark>73%</mark> | 67% |  
+|Top 1 accuracy | 56% | 56% | 65% | <mark style="background-color: #FFFF00">73%</mark> | 67% |  
 
 CNN: [link](https://portland-my.sharepoint.com/:u:/g/personal/szfung9-c_my_cityu_edu_hk/ESHombM__v1LiuUuGdtUpLcBB_Xi-ojziah5jdyTchR5Bg?e=2cvISS)
 
