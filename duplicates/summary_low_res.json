@@ -1,0 +1,65 @@
+{
+   "AK":[
+      "Topic_5_Data\\ISIC84by84\\Train\\AK\\ISIC_0053738.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\AK\\ISIC_0057051.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\AK\\ISIC_0057477.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\AK\\ISIC_0060116.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\AK\\ISIC_0061121.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\AK\\ISIC_0067799.jpg"
+   ],
+   "BCC":[
+      "Topic_5_Data\\ISIC84by84\\Train\\BCC\\ISIC_0054074.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\BCC\\ISIC_0054075.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\BCC\\ISIC_0054113.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\BCC\\ISIC_0054986.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\BCC\\ISIC_0064300.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\BCC\\ISIC_0065140.jpg"
+   ],
+   "BKL":[
+      "Topic_5_Data\\ISIC84by84\\Train\\BKL\\ISIC_0054911.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\BKL\\ISIC_0057272.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\BKL\\ISIC_0059011.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\BKL\\ISIC_0060482.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\BKL\\ISIC_0060606.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\BKL\\ISIC_0061089.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\BKL\\ISIC_0061391.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\BKL\\ISIC_0061802.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\BKL\\ISIC_0061902.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\BKL\\ISIC_0062361.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\BKL\\ISIC_0063304.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\BKL\\ISIC_0064670.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\BKL\\ISIC_0065588.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\BKL\\ISIC_0066634.jpg"
+   ],
+   "DF":[
+      
+   ],
+   "MEL":[
+      "Topic_5_Data\\ISIC84by84\\Train\\MEL\\ISIC_0053812.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\MEL\\ISIC_0054334.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\MEL\\ISIC_0054763.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\MEL\\ISIC_0055643.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\MEL\\ISIC_0056728.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\MEL\\ISIC_0058770.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\MEL\\ISIC_0061710.jpg"
+   ],
+   "NV":[
+      "Topic_5_Data\\ISIC84by84\\Train\\NV\\ISIC_0012127_downsampled.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\NV\\ISIC_0024366.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\NV\\ISIC_0024777.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\NV\\ISIC_0054023.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\NV\\ISIC_0054792.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\NV\\ISIC_0059354.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\NV\\ISIC_0059661.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\NV\\ISIC_0060997.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\NV\\ISIC_0062259.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\NV\\ISIC_0063659.jpg",
+      "Topic_5_Data\\ISIC84by84\\Train\\NV\\ISIC_0064007.jpg"
+   ],
+   "SCC":[
+      
+   ],
+   "VASC":[
+      
+   ]
+}

@@ -1,0 +1,50 @@
+
+search for duplicates within folder: AK
+preparing files: [735/735] [100%]
+comparing images: [735/735] [100%]
+Found 6 pair(s) of duplicate image(s) in 74.4174 seconds.
+AK_duplicate_result.json
+
+search for duplicates within folder: BCC
+preparing files: [3223/3223] [100%]
+comparing images: [3223/3223] [100%]
+Found 6 pair(s) of duplicate image(s) in 1022.6057 seconds.
+BCC_duplicate_result.json
+
+search for duplicates within folder: BKL
+preparing files: [2524/2524] [100%]
+comparing images: [2524/2524] [100%]
+Found 14 pair(s) of duplicate image(s) in 573.1169 seconds.
+BKL_duplicate_result.json
+
+search for duplicates within folder: DF
+preparing files: [139/139] [100%]
+comparing images: [139/139] [100%]
+Found 0 pair(s) of duplicate image(s) in 1.7039 seconds.
+DF_duplicate_result.json
+
+search for duplicates within folder: MEL
+preparing files: [4422/4422] [100%]
+comparing images: [4422/4422] [100%]
+Found 7 pair(s) of duplicate image(s) in 1734.6516 seconds.
+MEL_duplicate_result.json
+
+search for duplicates within folder: NV
+preparing files: [12775/12775] [100%]
+comparing images: [12775/12775] [100%]
+Found 11 pair(s) of duplicate image(s) in 14168.3453 seconds.
+NV_duplicate_result.json
+
+search for duplicates within folder: SCC
+preparing files: [528/528] [100%]
+comparing images: [528/528] [100%]
+Found 0 pair(s) of duplicate image(s) in 29.7399 seconds.
+SCC_duplicate_result.json
+
+search for duplicates within folder: VASC
+preparing files: [153/153] [100%]
+comparing images: [153/153] [100%]
+Found 0 pair(s) of duplicate image(s) in 3.9467 seconds.
+VASC_duplicate_result.json
+
+summary_duplicate_result.json
